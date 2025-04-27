@@ -34,17 +34,13 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_PRIVATE_IP }} 'sudo mkdir -p /var/www/html && sudo chown -R $USER:$USER /var/www/html'
 
-    # Copy webpage.html to EC2 using sudo
-    - name: Copy webpage.html to EC2 with sudo
+    # Replace the contents of index.nginx-debian.html with webpage.html content
+    - name: Replace index.nginx-debian.html with webpage.html content
       run: |
         scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa webpage.html ${{ secrets.EC2_USER }}@${{ secrets.EC2_PRIVATE_IP }}:/tmp/webpage.html
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_PRIVATE_IP }} 'sudo cp /tmp/webpage.html /var/www/html/index.nginx-debian.html && sudo chown www-data:www-data /var/www/html/index.nginx-debian.html'
 
-    # Use SSH to move webpage.html to /var/www/html using sudo
-    - name: Move webpage.html to /var/www/html
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_PRIVATE_IP }} 'sudo mv /tmp/webpage.html /var/www/html/webpage.html && sudo chown www-data:www-data /var/www/html/webpage.html'
-
-    # Restart Nginx on EC2 instance
+    # Restart Nginx to apply the changes
     - name: Restart Nginx on EC2
       run: |
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_PRIVATE_IP }} 'sudo systemctl restart nginx || echo "Failed to restart Nginx"'
